@@ -34,23 +34,27 @@ let createSpecialty = (data) => {
 
 let deleteSpecialty = (id) => {
   return new Promise(async (resolve, reject) => {
-    let user = await db.User.findOne({
-      where: { id: id },
-    });
-    if (!user) {
-      resolve({
-        errCode: 2,
-        errMessage: "The Specialty isn't exist",
+    try {
+      let specialty = await db.Specialty.findOne({
+        where: { id: id },
       });
-    }
-    await db.Specialty.destroy({
-      where: { id: id },
-    });
+      if (!specialty) {
+        resolve({
+          errCode: 2,
+          errMessage: "The Specialty isn't exist",
+        });
+      }
+      await db.Specialty.destroy({
+        where: { id: id },
+      });
 
-    resolve({
-      errCode: 0,
-      message: "The Specialty is deleted",
-    });
+      resolve({
+        errCode: 0,
+        message: "The Specialty is deleted",
+      });
+    } catch (e) {
+      reject(e);
+    }
   });
 };
 
@@ -123,9 +127,49 @@ let getDetailSpecialtyById = (inputId, location) => {
   });
 };
 
+let updateSpecialty = (data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      if (!data.name || !data.descriptionHtml || !data.descriptionMarkdown) {
+        resolve({
+          errCode: 2,
+          errMessage: "Missing required parameter",
+        });
+      }
+      let specialty = await db.Specialty.findOne({
+        where: { id: data.specialtyEdit },
+        raw: false,
+      });
+      if (specialty) {
+        specialty.name = data.name;
+        if (data.imageBase64) {
+          specialty.image = data.imageBase64;
+        }
+        specialty.descriptionHtml = data.descriptionHtml;
+        specialty.descriptionMarkdown = data.descriptionMarkdown;
+
+        await specialty.save();
+
+        resolve({
+          errCode: 0,
+          message: "Update the Specialty succeed!",
+        });
+      } else {
+        resolve({
+          errCode: 1,
+          errMessage: "Specialty's not found!",
+        });
+      }
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
 module.exports = {
   createSpecialty,
   deleteSpecialty,
   getAllSpecialty,
   getDetailSpecialtyById,
+  updateSpecialty,
 };

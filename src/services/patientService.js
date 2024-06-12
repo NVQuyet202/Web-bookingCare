@@ -19,13 +19,23 @@ let postBookAppointment = (data) => {
         !data.date ||
         !data.fullName ||
         !data.selectedGender ||
-        !data.address
+        !data.address ||
+        !data.timteId
       ) {
         resolve({
           errCode: 1,
           errMesage: "Missing parameter!",
         });
       } else {
+        let schedule = await db.Schedule.findOne({
+          where: { id: data.timteId },
+          raw: false,
+        });
+        if (schedule) {
+          schedule.currentNumber = 1;
+
+          await schedule.save();
+        }
         let token = uuidv4();
 
         await emailService.sendSimpleEmail({
